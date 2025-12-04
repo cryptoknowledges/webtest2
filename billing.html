@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Billing - FootWear Shop</title>
+<style>
+body{font-family:Arial;background:#f4f4f4;margin:0;padding:0}
+.container{max-width:500px;margin:50px auto;background:white;padding:30px;border-radius:8px;box-shadow:0 3px 10px rgba(0,0,0,0.1)}
+h2{text-align:center;margin-bottom:25px}
+label{display:block;margin-top:10px;font-weight:bold}
+input, textarea, select{width:100%;padding:8px;margin-top:5px;border-radius:4px;border:1px solid #ccc}
+button{margin-top:20px;padding:12px;width:100%;border:none;border-radius:5px;font-size:16px;cursor:pointer}
+.place-btn{background:#ff4500;color:white}
+.place-btn:hover{opacity:.9}
+</style>
+</head>
+<body>
+
+<div class="container">
+<h2>Billing Details</h2>
+<label>Name:</label><input type="text" id="name">
+<label>Email:</label><input type="email" id="email">
+<label>Phone:</label><input type="text" id="phone">
+<label>Address:</label><textarea id="address" rows="3"></textarea>
+<label>Payment Type:</label>
+<select id="paymentType" onchange="showPaymentOptions()">
+    <option value="Cash">Cash</option>
+    <option value="UPI">Online/UPI</option>
+</select>
+
+<div id="upiSection" style="display:none; margin-top:10px;">
+    <p>Payee Name: ABC Footwear</p>
+    <p>UPI ID: abc@upi</p>
+    <p>Upload Payment Proof:</p>
+    <input type="file" id="proofImage">
+</div>
+
+<button class="place-btn" onclick="placeOrder()">Place Order</button>
+</div>
+
+<script>
+function showPaymentOptions(){
+    const type = document.getElementById("paymentType").value;
+    document.getElementById("upiSection").style.display = type==="UPI"?"block":"none";
+}
+
+function placeOrder(){
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const address = document.getElementById("address").value.trim();
+    const paymentType = document.getElementById("paymentType").value;
+
+    if(!name || !email || !phone || !address){ alert("Please fill all details!"); return; }
+
+    let cart = JSON.parse(localStorage.getItem("checkoutItems")) || [];
+    if(cart.length===0){ alert("Cart is empty!"); return; }
+
+    let total = cart.reduce((acc, item)=> acc + parseFloat(item.price),0);
+
+    let proofImage = "";
+    if(paymentType==="UPI"){
+        const file = document.getElementById("proofImage").files[0];
+        if(!file){ alert("Upload UPI payment proof"); return; }
+        const reader = new FileReader();
+        reader.onload = function(e){
+            proofImage = e.target.result;
+            saveOrder(name,email,phone,address,paymentType,total,proofImage,cart);
+        }
+        reader.readAsDataURL(file);
+    } else {
+        saveOrder(name,email,phone,address,paymentType,total,proofImage,cart);
+    }
+}
+
+function saveOrder(name,email,phone,address,paymentType,total,proofImage,cart){
+    let orders = JSON.parse(localStorage.getItem("orders")) || [];
+    const id = "ORD"+Date.now();
+    orders.push({
+        id, customer:name, email, phone, address,
+        paymentType, proofImage, items:cart, total, status:"Pending", date: new Date().toLocaleString()
+    });
+    localStorage.setItem("orders", JSON.stringify(orders));
+    localStorage.removeItem("checkoutItems");
+    alert("Order placed successfully!");
+    window.location.href="index.html";
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - Add Product</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Arial',sans-serif;}
+body{background:#f4f4f9;}
+.sidebar{
+    width:220px;height:100vh;background:#222;color:white;padding-top:25px;position:fixed;top:0;left:0;
+}
+.sidebar h2{text-align:center;margin-bottom:20px;font-size:24px;color:#ff4500;}
+.sidebar a{display:flex;align-items:center;padding:12px 20px;color:white;text-decoration:none;font-size:16px;transition:0.3s;}
+.sidebar a i{margin-right:10px;}
+.sidebar a:hover, .sidebar a.active{background:#ff4500;border-radius:6px;}
+.content{margin-left:240px;padding:30px;min-height:100vh;}
+.content h1{text-align:center;margin-bottom:30px;color:#222;}
+
+.dashboard-box{display:flex;flex-wrap:wrap;gap:25px;justify-content:center;margin-bottom:25px;}
+.box{
+    background:white;padding:25px;border-radius:12px;
+    flex:1 1 220px;text-align:center;
+    box-shadow:0 8px 25px rgba(0,0,0,0.1);
+    font-size:18px;font-weight:bold;transition:0.3s;
+}
+.box:hover{
+    transform:translateY(-5px);
+    box-shadow:0 12px 30px rgba(0,0,0,0.2);
+}
+.box i{font-size:28px;color:#ff4500;margin-bottom:10px;display:block;}
+
+form{
+    background:white;padding:25px;border-radius:12px;
+    box-shadow:0 8px 25px rgba(0,0,0,0.1);
+    max-width:600px;margin:0 auto;
+}
+form input, form textarea, form select, form button{
+    width:100%;padding:12px;margin:10px 0;border-radius:6px;border:1px solid #ccc;
+    transition:0.3s;font-size:15px;
+}
+form input:focus, form textarea:focus, form select:focus{
+    border-color:#ff4500;outline:none;
+    box-shadow:0 0 8px rgba(255,69,0,0.3);
+}
+form button{
+    background:#ff4500;color:white;border:none;cursor:pointer;font-size:16px;
+}
+form button:hover{
+    background:#ff6b35;
+    box-shadow:0 5px 15px rgba(255,69,0,0.4);
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+<h2><i class="fas fa-shoe-prints"></i> Admin</h2>
+<a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a class="active" href="admin.html"><i class="fas fa-plus"></i> Add Product</a>
+<a href="admin-products.html"><i class="fas fa-boxes"></i> All Products</a>
+<a href="admin-orders.html"><i class="fas fa-shopping-cart"></i> Orders</a>
+<a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+</div>
+
+<div class="content">
+<h1>Add New Product</h1>
+
+<div class="dashboard-box">
+    <div class="box"><i class="fas fa-box"></i>Total Products: <span id="totalProducts">0</span></div>
+    <div class="box"><i class="fas fa-exclamation-triangle"></i>Low Stock: <span id="lowStock">0</span></div>
+    <div class="box"><i class="fas fa-coins"></i>Inventory Value: ₹<span id="inventoryValue">0</span></div>
+</div>
+
+<form id="productForm">
+    <input type="text" id="productName" placeholder="Product Name" required>
+    <input type="file" id="productImage" accept="image/*" required>
+
+    <textarea id="productSizes" placeholder="Example: 6:10, 7:5, 8:3" required></textarea>
+
+    <input type="number" id="productPrice" placeholder="Price" required>
+
+    <select id="productCategory" required>
+        <option value="">Select Category</option>
+        <option value="men">Men & Boys</option>
+        <option value="ladies">Ladies</option>
+    </select>
+
+    <button type="submit">Add Product</button>
+</form>
+</div>
+
+<script>
+// LOGIN CHECK
+if(localStorage.getItem("adminLoggedIn") !== "true"){
+    window.location.href = "login.html";
+}
+
+function logout(){
+    localStorage.removeItem("adminLoggedIn");
+    window.location.href = "login.html";
+}
+
+// LOAD PRODUCTS
+let products = JSON.parse(localStorage.getItem("adminProducts")) || [];
+
+// UPDATE DASHBOARD
+function updateDashboard(){
+    let total = products.length;
+    let low = 0;
+    let totalValue = 0;
+
+    products.forEach(p => {
+        p.sizes.forEach(s => {
+            if(s.qty <= 2) low++;
+            totalValue += s.qty * p.price;
+        });
+    });
+
+    document.getElementById("totalProducts").innerText = total;
+    document.getElementById("lowStock").innerText = low;
+    document.getElementById("inventoryValue").innerText = totalValue;
+}
+updateDashboard();
+
+// ADD PRODUCT
+document.getElementById("productForm").addEventListener("submit", function(e){
+    e.preventDefault();
+
+    const name = document.getElementById("productName").value.trim();
+    const imageInput = document.getElementById("productImage");
+    const price = parseFloat(document.getElementById("productPrice").value);
+    const category = document.getElementById("productCategory").value;
+
+    // PARSE SIZES
+    let sizeInput = document.getElementById("productSizes").value.replace(/\s+/g,"").split(",");
+    let sizes = [];
+
+    sizeInput.forEach(pair => {
+        const [size, qty] = pair.split(":");
+        if(size && qty){
+            sizes.push({ size, qty: Number(qty) });
+        }
+    });
+
+    if(!name || !imageInput.files.length || !sizes.length || isNaN(price) || !category){
+        alert("Please fill all fields correctly.");
+        return;
+    }
+
+    // SAVE IMAGE
+    const reader = new FileReader();
+    reader.onload = function(){
+        const imageData = reader.result;
+
+        products.push({
+            name,
+            image: imageData,
+            sizes,
+            price,
+            category
+        });
+
+        localStorage.setItem("adminProducts", JSON.stringify(products));
+
+        updateDashboard();
+        alert("Product added successfully!");
+        document.getElementById("productForm").reset();
+    };
+
+    reader.readAsDataURL(imageInput.files[0]);
+});
+</script>
+
+</body>
+</html>

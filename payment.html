@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment - FootWear Shop</title>
+<style>
+body{font-family:Arial;background:#f4f4f4;margin:0;padding:0}
+.container{max-width:600px;margin:50px auto;background:white;padding:30px;border-radius:8px;box-shadow:0 3px 10px rgba(0,0,0,0.1)}
+h2{text-align:center;margin-bottom:25px}
+.payment-option{padding:15px;border:1px solid #ccc;border-radius:5px;margin-bottom:15px;cursor:pointer;background:#f9f9f9}
+.payment-option:hover{background:#f1f1f1}
+.details{display:none;margin-top:15px}
+input,textarea{width:100%;padding:10px;margin:8px 0;border-radius:4px;border:1px solid #ccc}
+button{width:100%;padding:12px;background:#ff4500;color:white;border:none;border-radius:5px;margin-top:15px;font-size:18px;cursor:pointer}
+button:hover{opacity:.9}
+.qr{width:150px;height:150px;margin:10px 0}
+.back-arrow{position:absolute;top:15px;right:20px;font-size:24px;cursor:pointer;color:#ff4500;}
+</style>
+</head>
+<body>
+
+<div class="container">
+<span class="back-arrow" onclick="goBack()">←</span>
+<h2>Payment</h2>
+
+<div class="payment-option" onclick="showCash()">Cash on Delivery</div>
+<div class="details" id="cashDetails">
+    <h3>Cash Payment Selected</h3>
+    <div id="billingSummary"></div>
+    <button onclick="submitOrder('cash')">Submit Order</button>
+</div>
+
+<div class="payment-option" onclick="showUPI()">Online / UPI</div>
+<div class="details" id="upiDetails">
+    <h3>UPI Payment</h3>
+    <p>Pay to: <strong>Receiver Name</strong></p>
+    <p>UPI ID: <strong>receiver@upi</strong></p>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5b/UPI-QR.png" alt="QR Code" class="qr">
+    <label>Upload Payment Screenshot:</label>
+    <input type="file" id="upiScreenshot" accept="image/*">
+    <div id="billingSummaryUPI"></div>
+    <button onclick="submitOrder('upi')">Submit Order</button>
+</div>
+</div>
+
+<script>
+function goBack(){ window.location.href="billing.html"; }
+
+const billing = JSON.parse(localStorage.getItem("billingDetails")) || {};
+const items = JSON.parse(localStorage.getItem("billingItems")) || [];
+
+function showCash(){
+    document.getElementById("cashDetails").style.display="block";
+    document.getElementById("upiDetails").style.display="none";
+    showSummary("cashSummary");
+}
+
+function showUPI(){
+    document.getElementById("upiDetails").style.display="block";
+    document.getElementById("cashDetails").style.display="none";
+    showSummary("billingSummaryUPI");
+}
+
+function showSummary(divId){
+    let html = "<h4>Order Summary:</h4>";
+    items.forEach(it=>{
+        html += `<p>${it.name} - ₹${it.price}</p>`;
+    });
+    const total = items.reduce((acc,it)=>acc+parseFloat(it.price),0);
+    html += `<p><strong>Total: ₹${total}</strong></p>`;
+    html += `<p><strong>Name:</strong> ${billing.name}</p>`;
+    html += `<p><strong>Address:</strong> ${billing.address}</p>`;
+    html += `<p><strong>Phone:</strong> ${billing.phone}</p>`;
+    document.getElementById(divId).innerHTML = html;
+}
+
+function submitOrder(type){
+    if(type==='upi'){
+        const fileInput = document.getElementById("upiScreenshot");
+        if(fileInput.files.length===0){ alert("Please upload payment screenshot"); return; }
+    }
+
+    let orders = JSON.parse(localStorage.getItem("orders")) || [];
+    orders.push({
+        items,
+        billing,
+        paymentType: type,
+        date: new Date().toLocaleString()
+    });
+    localStorage.setItem("orders", JSON.stringify(orders));
+
+    localStorage.removeItem("cartData");
+    localStorage.removeItem("checkoutItems");
+    localStorage.removeItem("billingItems");
+    localStorage.removeItem("billingDetails");
+
+    alert("Order placed successfully!");
+    window.location.href="index.html";
+}
+</script>
+
+</body>
+</html>
