@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track Your Order - FootWear Shop</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Arial',sans-serif;}
+body{background:#f4f4f9;color:#333;}
+.navbar{
+    width:100%;background:#222;color:white;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000;
+}
+.navbar h1{font-size:24px;color:#ff4500;}
+.navbar a{color:white;text-decoration:none;font-size:16px;margin-left:20px;transition:0.3s;}
+.navbar a:hover{color:#ff4500;}
+
+.container{max-width:900px;margin:50px auto;padding:0 20px;}
+h2{text-align:center;color:#222;margin-bottom:30px;}
+input, button{padding:10px 15px;border-radius:6px;border:1px solid #ccc;font-size:16px;}
+button{background:#ff4500;color:white;border:none;cursor:pointer;transition:0.3s;font-weight:bold;margin-left:10px;}
+button:hover{background:#e03e00;}
+#orderList{margin-top:30px;}
+
+.order-card{
+    background:white;padding:20px;border-radius:10px;
+    box-shadow:0 6px 15px rgba(0,0,0,0.1);margin-bottom:20px;
+    position:relative;
+}
+
+.order-card h3{margin-bottom:10px;}
+.order-card .cancel-btn{
+    position:absolute;top:20px;right:20px;
+    background:#dc3545;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;
+    transition:0.3s;font-size:14px;
+}
+.order-card .cancel-btn:hover{opacity:0.85;}
+
+.item-box{
+    background:#fafafa;padding:10px;border-radius:6px;margin-bottom:10px;
+    border:1px solid #e6e6e6;
+}
+
+.status{
+    font-weight:bold;
+    padding:4px 8px;
+    border-radius:6px;
+}
+.status.pending{color:#d89100;}
+.status.delivered{color:#1e9a3c;}
+.status.cancelled{color:#d52222;}
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div class="navbar">
+<h1><i class="fas fa-shoe-prints"></i> FootWear Shop</h1>
+<div>
+    <a href="index.html"><i class="fas fa-home"></i> Home</a>
+    <a href="my-order.html"><i class="fas fa-shopping-basket"></i> My Order</a>
+</div>
+</div>
+
+<div class="container">
+    <h2>Track Your Order</h2>
+
+    <div style="text-align:center;">
+        <input type="text" id="phoneInput" placeholder="Enter your phone number">
+        <button onclick="searchOrders()">Search</button>
+    </div>
+
+    <div id="orderList"></div>
+</div>
+
+<script>
+// Fetch orders from admin panel
+let orders = JSON.parse(localStorage.getItem("adminOrders")) || [];
+let cancelRequests = JSON.parse(localStorage.getItem("cancelRequests")) || [];
+
+function searchOrders() {
+    const phone = document.getElementById("phoneInput").value.trim();
+    const orderList = document.getElementById("orderList");
+    orderList.innerHTML = "";
+
+    if (!phone) {
+        alert("Please enter a phone number.");
+        return;
+    }
+
+    const userOrders = orders.filter(o => o.customerPhone === phone);
+
+    if (userOrders.length === 0) {
+        orderList.innerHTML = "<p style='text-align:center;color:#555;'>No orders found for this phone number.</p>";
+        return;
+    }
+
+    userOrders.forEach(order => {
+
+        const realOrderNo = order.orderNumber || order.orderNo || order.id || "N/A"; // Fix for order number
+
+        let itemsHTML = "";
+        order.items.forEach(item => {
+            itemsHTML += `
+                <div class="item-box">
+                    <p><strong>Product:</strong> ${item.name}</p>
+                    <p><strong>Size:</strong> ${item.size}</p>
+                    <p><strong>Qty:</strong> ${item.qty}</p>
+                    <p><strong>Price:</strong> ₹${item.price}</p>
+                </div>
+            `;
+        });
+
+        const div = document.createElement("div");
+        div.className = "order-card";
+        div.innerHTML = `
+            <h3>Order No: ${realOrderNo}</h3>
+            <p><strong>Date:</strong> ${order.date}</p>
+            <p><strong>Status:</strong> <span class="status ${order.status}">${order.status.toUpperCase()}</span></p>
+            <p><strong>Total Amount:</strong> ₹${order.total}</p>
+            <h3 style="margin-top:15px;">Items:</h3>
+            ${itemsHTML}
+        `;
+
+        // Only show cancel button if order is pending
+        if(order.status === "pending") {
+            const cancelBtn = document.createElement("button");
+            cancelBtn.className = "cancel-btn";
+            cancelBtn.innerText = "Cancel Order";
+
+            cancelBtn.onclick = function() {
+                requestCancel(realOrderNo, order.customerName, order.customerPhone);
+            };
+
+            div.appendChild(cancelBtn);
+        }
+
+        orderList.appendChild(div);
+    });
+}
+
+// Function to request cancel
+function requestCancel(orderNumber, customerName, customerPhone) {
+    const reason = prompt("Please enter reason for cancellation:");
+    if (!reason) return alert("Cancellation reason is required.");
+
+    cancelRequests.push({
+        orderNumber,
+        customerName,
+        customerPhone,
+        reason,
+        date: new Date().toLocaleString()
+    });
+
+    localStorage.setItem("cancelRequests", JSON.stringify(cancelRequests));
+    alert("Your cancellation request has been submitted to the admin.");
+    searchOrders();
+}
+</script>
+
+</body>
+</html>

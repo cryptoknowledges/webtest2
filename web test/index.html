@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FootWear Shop</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Arial',sans-serif;}
+body{background:#f4f4f9;color:#333;}
+
+/* Navbar */
+.navbar{
+    width:100%;background:#222;color:white;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000;
+}
+.navbar h1{font-size:24px;color:#ff4500;}
+.navbar a{color:white;text-decoration:none;font-size:16px;margin-left:20px;transition:0.3s;position:relative;}
+.navbar a:hover{color:#ff4500;}
+.navbar .cart-count{
+    position:absolute;top:-8px;right:-12px;background:red;color:white;width:18px;height:18px;
+    border-radius:50%;font-size:12px;display:flex;align-items:center;justify-content:center;
+}
+
+/* Hero Section */
+.hero{
+    background:url('https://images.unsplash.com/photo-1600181950132-f2c8df62ef5c?auto=format&fit=crop&w=1470&q=80') center/cover no-repeat;
+    text-align:center;color:white;padding:120px 20px;position:relative;
+}
+.hero::after{
+    content:"";position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1;
+}
+.hero-content{position:relative;z-index:2;}
+.hero h2{font-size:48px;margin-bottom:20px;text-shadow:2px 2px 10px rgba(0,0,0,0.5);cursor: default;}
+.hero p{font-size:20px;margin-bottom:30px;text-shadow:1px 1px 5px rgba(0,0,0,0.5);cursor: default;}
+.hero a{
+    background:#ff4500;color:white;padding:15px 30px;border-radius:6px;text-decoration:none;font-weight:bold;transition:0.3s;
+}
+.hero a:hover{background:#e03e00;}
+
+/* Search & Category Filter */
+.filter-bar{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin:30px 0 20px 0;
+    flex-wrap: wrap;
+}
+.filter-bar input[type="text"]{
+    padding:10px 15px;
+    width:250px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    font-size:16px;
+}
+.filter-bar button{
+    padding:10px 20px;
+    background:#ff4500;
+    color:white;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:bold;
+    transition:0.3s;
+}
+.filter-bar button:hover{background:#e03e00;}
+
+/* Products Section */
+.products-section{padding:0 20px 50px 20px;}
+.products-section h2{text-align:center;font-size:36px;margin-bottom:20px;color:#222;}
+.products-section h3{margin-top:40px;margin-bottom:20px;font-size:28px;text-align:left;color:#ff4500;}
+.product-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:25px;}
+.product-card{background:white;border-radius:12px;overflow:hidden;box-shadow:0 8px 25px rgba(0,0,0,0.1);transition:0.3s;display:flex;flex-direction:column;}
+.product-card:hover{transform:translateY(-5px);box-shadow:0 12px 30px rgba(0,0,0,0.2);}
+.product-card img{width:100%;height:220px;object-fit:cover;}
+.product-card .card-body{padding:15px;flex:1;display:flex;flex-direction:column;}
+.product-card h3{font-size:20px;margin-bottom:10px;color:#ff4500;}
+.product-card p{font-size:14px;color:#555;margin-bottom:5px;flex:1;}
+.product-card .price{font-weight:bold;font-size:16px;margin-bottom:10px;}
+.product-card button{
+    padding:10px 15px;background:#ff4500;color:white;border:none;border-radius:6px;cursor:pointer;
+    transition:0.3s;font-weight:bold;
+}
+.product-card button:hover{background:#e03e00;}
+
+/* Cart Modal */
+#cartModal{
+    display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:200;
+}
+#cartModal .cart-content{
+    background:white;width:90%;max-width:600px;padding:20px;border-radius:8px;position:relative;
+}
+#cartModal h3{margin-bottom:20px;}
+#cartModal .close-cart{position:absolute;top:10px;right:15px;cursor:pointer;font-size:22px;font-weight:bold;}
+.cart-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #ccc;}
+.cart-item img{width:50px;height:50px;object-fit:cover;border-radius:4px;margin-right:10px;}
+.cart-item-details{flex:1;}
+.cart-item-details p{margin:2px 0;font-size:14px;}
+.cart-item button{background:red;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;}
+.cart-total{font-weight:bold;font-size:18px;text-align:right;margin-top:15px;}
+#placeOrderBtn{
+    margin-top:15px;
+    padding:12px 20px;
+    background:green;
+    color:white;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:bold;
+}
+#placeOrderBtn:hover{background:#006400;}
+
+/* Footer */
+footer{background:#222;color:white;text-align:center;padding:20px;margin-top:50px;}
+footer a{color:#ff4500;text-decoration:none;}
+footer a:hover{text-decoration:underline;}
+
+/* Responsive */
+@media(max-width:768px){
+    .hero h2{font-size:32px;}
+    .hero p{font-size:16px;}
+    .product-list{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));}
+    .filter-bar input[type="text"]{width:100%;}
+}
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div class="navbar">
+<h1><i class="fas fa-shoe-prints"></i> FootWear Shop</h1>
+<div>
+    <a href="index.html"><i class="fas fa-home"></i> Home</a>
+    <a href="#products"><i class="fas fa-boxes"></i> Products</a>
+    <a href="my-order.html"><i class="fas fa-shopping-basket"></i> My Order</a>
+    <a href="login.html"><i class="fas fa-shoe-prints"></i> Admin</a>
+    <a href="#" onclick="openCart()">
+        <i class="fas fa-shopping-cart"></i> Cart
+        <span class="cart-count" id="cartCount">0</span>
+    </a>
+</div>
+</div>
+
+<!-- Hero Section -->
+<div class="hero">
+<div class="hero-content">
+    <h2>Step Into Style</h2>
+    <p>Explore our exclusive collection of shoes for Men & Women. Comfort and style, all in one step.</p>
+    <a href="#products"><i class="fas fa-shopping-bag"></i> Shop Now</a>
+</div>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <input type="text" id="searchInput" placeholder="Search product by name..." oninput="searchProducts()">
+    <button onclick="filterByCategory('men')">Men & Boys</button>
+    <button onclick="filterByCategory('ladies')">Ladies</button>
+</div>
+
+<!-- Products Section -->
+<div class="products-section" id="products">
+<h2>Our Products</h2>
+<div class="product-list" id="productList"></div>
+</div>
+
+<!-- Cart Modal -->
+<div id="cartModal">
+<div class="cart-content">
+    <span class="close-cart" onclick="closeCart()">×</span>
+    <h3>Your Cart</h3>
+    <div id="cartItems"></div>
+    <div class="cart-total" id="cartTotal">Total: ₹0</div>
+    <button id="placeOrderBtn">Place Order</button>
+</div>
+</div>
+
+<!-- Footer -->
+<footer>
+<p>&copy; 2025 FootWear Shop. All Rights Reserved | Designed by Admin</p>
+</footer>
+
+<script>
+// Load products and cart from localStorage
+let products = JSON.parse(localStorage.getItem("adminProducts")) || [];
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+const productList = document.getElementById("productList");
+const cartCount = document.getElementById("cartCount");
+
+let currentCategory = ""; // Filter category
+let searchQuery = "";     // Search query
+
+// Display products with filters applied
+function displayProducts(){
+    let filteredProducts = products;
+
+    if(currentCategory) filteredProducts = filteredProducts.filter(p => p.category === currentCategory);
+    if(searchQuery) filteredProducts = filteredProducts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const menProducts = filteredProducts.filter(p => p.category === "men");
+    const ladiesProducts = filteredProducts.filter(p => p.category === "ladies");
+
+    productList.innerHTML = "";
+
+    if(currentCategory !== "ladies" && menProducts.length > 0){
+        productList.innerHTML += `<h3 style="grid-column:1/-1;color:#ff4500;">Men & Boys</h3>`;
+        menProducts.forEach((p)=>{productList.innerHTML += productCardHTML(p);});
+    }
+
+    if(currentCategory !== "men" && ladiesProducts.length > 0){
+        productList.innerHTML += `<h3 style="grid-column:1/-1;color:#ff4500;margin-top:30px;">Ladies</h3>`;
+        ladiesProducts.forEach((p)=>{productList.innerHTML += productCardHTML(p);});
+    }
+
+    if(filteredProducts.length === 0){
+        productList.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#555;'>No products found.</p>";
+    }
+}
+
+// Generate HTML for a product card
+function productCardHTML(product){
+    return `
+    <div class="product-card">
+        <img src="${product.image}" alt="${product.name}">
+        <div class="card-body">
+            <h3>${product.name}</h3>
+            <p class="price">₹${product.price}</p>
+            <button onclick="addToCartByName('${product.name}')"><i class="fas fa-cart-plus"></i> Add to Cart</button>
+        </div>
+    </div>`;
+}
+
+// Add to cart function
+function addToCartByName(name){
+    const product = products.find(p => p.name === name);
+    const existing = cart.find(item => item.name === product.name);
+    if(existing){
+        existing.qty += 1;
+    }else{
+        cart.push({...product, qty:1});
+    }
+    localStorage.setItem("cart", JSON.stringify(cart));
+    updateCartCount();
+    alert(product.name + " added to cart!");
+}
+
+// Update cart count in navbar
+function updateCartCount(){
+    const totalItems = cart.reduce((acc,item)=>acc+item.qty,0);
+    cartCount.textContent = totalItems;
+}
+
+// Cart Modal
+const cartModal = document.getElementById("cartModal");
+const cartItemsDiv = document.getElementById("cartItems");
+const cartTotalDiv = document.getElementById("cartTotal");
+const placeOrderBtn = document.getElementById("placeOrderBtn");
+
+function openCart(){
+    renderCart();
+    cartModal.style.display = "flex";
+}
+
+function closeCart(){
+    cartModal.style.display = "none";
+}
+
+function renderCart(){
+    if(cart.length===0){
+        cartItemsDiv.innerHTML = "<p>Your cart is empty.</p>";
+        cartTotalDiv.textContent = "Total: ₹0";
+        placeOrderBtn.style.display = "none";
+        return;
+    }
+
+    placeOrderBtn.style.display = "block";
+    cartItemsDiv.innerHTML = "";
+    let total = 0;
+    cart.forEach((item,index)=>{
+        total += item.price * item.qty;
+        cartItemsDiv.innerHTML += `
+        <div class="cart-item">
+            <img src="${item.image}" alt="${item.name}">
+            <div class="cart-item-details">
+                <p>${item.name}</p>
+                <p>₹${item.price} x ${item.qty}</p>
+            </div>
+            <button onclick="removeFromCart(${index})">Remove</button>
+        </div>`;
+    });
+    cartTotalDiv.textContent = "Total: ₹" + total;
+}
+
+function removeFromCart(index){
+    cart.splice(index,1);
+    localStorage.setItem("cart", JSON.stringify(cart));
+    renderCart();
+    updateCartCount();
+}
+
+// Place Order Button - Redirect to checkout
+placeOrderBtn.addEventListener("click", function(){
+    if(cart.length === 0){
+        alert("Your cart is empty!");
+        return;
+    }
+    window.location.href = "checkout.html";
+});
+
+// Search function
+function searchProducts(){
+    const input = document.getElementById("searchInput");
+    searchQuery = input.value.trim();
+    displayProducts();
+}
+
+// Filter by category
+function filterByCategory(cat){
+    currentCategory = cat;
+    displayProducts();
+}
+
+// Initialize
+displayProducts();
+updateCartCount();
+</script>
+
+</body>
+</html>

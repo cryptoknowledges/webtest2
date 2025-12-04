@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Arial',sans-serif;}
+body{background:linear-gradient(135deg,#ff4500,#ff8c00);display:flex;justify-content:center;align-items:center;height:100vh;}
+.login-container{background:white;padding:40px;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,0.3);width:100%;max-width:400px;text-align:center;transition: transform 0.3s;}
+.login-container:hover{transform:translateY(-5px);}
+.login-container h1{margin-bottom:30px;color:#ff4500;text-shadow:1px 1px 2px #000;}
+.login-container input{width:100%;padding:14px;margin:12px 0;border-radius:6px;border:1px solid #ccc;font-size:15px;transition:0.3s;}
+.login-container input:focus{border-color:#ff4500;outline:none;box-shadow:0 0 8px rgba(255,69,0,0.3);}
+.login-container button{width:100%;padding:14px;margin-top:15px;border:none;border-radius:6px;background:#ff4500;color:white;font-size:16px;cursor:pointer;transition:0.3s;}
+.login-container button:hover{background:#ff6b35;box-shadow:0 5px 15px rgba(255,69,0,0.4);}
+.alert{color:red;margin-top:10px;font-size:14px;}
+</style>
+</head>
+<body>
+
+<div class="login-container">
+<h1><i class="fas fa-shoe-prints"></i> Admin Login</h1>
+<input type="text" id="username" placeholder="Username" required>
+<input type="password" id="password" placeholder="Password" required>
+<button onclick="login()">Login</button>
+<div class="alert" id="alertMsg"></div>
+</div>
+
+<script>
+function login(){
+    const user=document.getElementById("username").value.trim();
+    const pass=document.getElementById("password").value.trim();
+    const alertMsg=document.getElementById("alertMsg");
+    if(user==="admin" && pass==="12345"){
+        localStorage.setItem("adminLoggedIn","true");
+        window.location.href="dashboard.html";
+    }else{
+        alertMsg.innerText="Invalid credentials!";
+    }
+}
+</script>
+</body>
+</html>

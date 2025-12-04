@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - Orders</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Arial',sans-serif;}
+body{background:#f4f4f9;}
+.sidebar{
+    width:220px;height:100vh;background:#222;color:white;padding-top:25px;position:fixed;top:0;left:0;
+}
+.sidebar h2{text-align:center;margin-bottom:20px;font-size:24px;color:#ff4500;}
+.sidebar a{display:flex;align-items:center;padding:12px 20px;color:white;text-decoration:none;font-size:16px;transition:0.3s;}
+.sidebar a i{margin-right:10px;}
+.sidebar a:hover, .sidebar a.active{background:#ff4500;border-radius:6px;}
+.content{margin-left:240px;padding:30px;min-height:100vh;}
+.content h1{text-align:center;margin-bottom:30px;color:#222;}
+.dashboard-box{display:flex;flex-wrap:wrap;gap:25px;justify-content:center;margin-bottom:25px;}
+.box{background:white;padding:25px;border-radius:12px;flex:1 1 220px;text-align:center;
+     box-shadow:0 8px 25px rgba(0,0,0,0.1);font-size:18px;font-weight:bold;transition:0.3s;}
+.box:hover{transform:translateY(-5px);box-shadow:0 12px 30px rgba(0,0,0,0.2);}
+.box i{font-size:28px;color:#ff4500;margin-bottom:10px;display:block;}
+.tabs{display:flex;justify-content:center;margin-bottom:20px;}
+.tabs button{background:#fff;border:1px solid #ccc;padding:10px 20px;margin:0 5px;border-radius:6px;cursor:pointer;transition:0.3s;}
+.tabs button.active{background:#ff4500;color:white;border:none;}
+.top-controls{display:flex;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+.top-controls input{padding:10px;border-radius:6px;border:1px solid #ccc;width:220px;}
+.top-controls button{padding:10px 20px;border:none;background:#ff4500;color:white;border-radius:6px;cursor:pointer;}
+table{width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden;box-shadow:0 8px 25px rgba(0,0,0,0.1);}
+th,td{padding:12px 15px;text-align:left;border-bottom:1px solid #ddd;font-size:14px;}
+th{background:#ff4500;color:white;}
+tr:hover{background:#f9f9f9;}
+.status{padding:5px 10px;border-radius:6px;color:white;font-weight:bold;font-size:13px;}
+.status.pending{background:#ffc107;}
+.status.delivered{background:#28a745;}
+.status.cancelled{background:#dc3545;}
+.action-btn{border:none;padding:6px 10px;border-radius:6px;cursor:pointer;margin-right:5px;color:white;transition:0.3s;}
+.view{background:#17a2b8;}
+.complete{background:#28a745;}
+.delete{background:#dc3545;}
+.whatsapp{background:#25D366;}
+.print{background:#6c63ff;}
+.action-btn:hover{opacity:0.85;}
+#orderModal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:200;}
+.modal-content{background:white;width:90%;max-width:700px;padding:20px;border-radius:8px;position:relative;}
+.close-modal{position:absolute;top:10px;right:15px;cursor:pointer;font-size:22px;font-weight:bold;}
+.modal-item{display:flex;align-items:center;margin-bottom:10px;}
+.modal-item img{width:60px;height:60px;border-radius:6px;margin-right:10px;}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+<h2><i class="fas fa-shoe-prints"></i> Admin</h2>
+<a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="admin.html"><i class="fas fa-plus"></i> Add Product</a>
+<a href="admin-products.html"><i class="fas fa-boxes"></i> All Products</a>
+<a class="active" href="admin-orders.html"><i class="fas fa-shopping-cart"></i> Orders</a>
+<a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+</div>
+
+<div class="content">
+<h1>Orders</h1>
+
+<div class="dashboard-box">
+    <div class="box"><i class="fas fa-shopping-bag"></i>Total Orders: <span id="totalOrders">0</span></div>
+    <div class="box"><i class="fas fa-spinner"></i>Pending: <span id="pendingOrders">0</span></div>
+    <div class="box"><i class="fas fa-check-circle"></i>Delivered: <span id="deliveredOrders">0</span></div>
+</div>
+
+<div class="tabs">
+    <button class="active" onclick="switchTab('all')">All</button>
+    <button onclick="switchTab('pending')">Pending</button>
+    <button onclick="switchTab('delivered')">Delivered</button>
+</div>
+
+<div class="top-controls">
+    <input type="text" id="searchInput" placeholder="Search by name / phone / order #" onkeyup="renderOrders()">
+    <input type="date" id="dateFilter" onchange="renderOrders()">
+</div>
+
+<div id="ordersTable"></div>
+</div>
+
+<!-- Modal -->
+<div id="orderModal">
+<div class="modal-content">
+    <span class="close-modal" onclick="closeModal()">×</span>
+    <h3>Order Details</h3>
+    <p id="modalName"></p>
+    <p id="modalPhone"></p>
+    <p id="modalOrderNumber"></p>
+    <p id="modalDate"></p>
+    <div id="modalItems"></div>
+    <p id="modalTotal" style="font-weight:bold;margin-top:10px;"></p>
+    <p id="modalStatus"></p>
+</div>
+</div>
+
+<script>
+if(localStorage.getItem("adminLoggedIn")!=="true") location.href="login.html";
+function logout(){localStorage.removeItem("adminLoggedIn"); location.href="login.html";}
+
+let orders = JSON.parse(localStorage.getItem("adminOrders")) || [];
+
+/* Fix old orders */
+orders = orders.map(o=>{
+    if(!o.orderNumber) o.orderNumber = "ORD" + Math.floor(Math.random()*90000+10000);
+    if(!o.customerName && o.customer){
+        let name = o.customer.split("(")[0].trim();
+        let phone = o.customer.split("(")[1]?.replace(")","").trim() || "";
+        return {...o, customerName: name, customerPhone: phone, status:o.status||"pending", date:o.date||new Date().toLocaleString()};
+    }
+    return o;
+});
+localStorage.setItem("adminOrders", JSON.stringify(orders));
+
+let currentTab="all";
+function switchTab(tab){
+    currentTab = tab;
+    document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+    document.querySelector(`.tabs button[onclick="switchTab('${tab}')"]`).classList.add("active");
+    renderOrders();
+}
+
+function updateDashboard(){
+    document.getElementById("totalOrders").innerText=orders.length;
+    document.getElementById("pendingOrders").innerText=orders.filter(o=>o.status==="pending").length;
+    document.getElementById("deliveredOrders").innerText=orders.filter(o=>o.status==="delivered").length;
+}
+
+function renderOrders(){
+    let search = document.getElementById("searchInput").value.toLowerCase();
+    let dateFilter = document.getElementById("dateFilter").value;
+
+    let list = orders.filter(o=>{
+        let matchTab = currentTab==="all" || o.status===currentTab;
+        let matchSearch = o.customerName.toLowerCase().includes(search) ||
+                          o.customerPhone.includes(search) ||
+                          (o.orderNumber && o.orderNumber.toLowerCase().includes(search));
+        let matchDate = !dateFilter || o.date.startsWith(dateFilter);
+        return matchTab && matchSearch && matchDate;
+    });
+
+    let html = `<table>
+        <tr>
+            <th>#</th>
+            <th>Order No</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>`;
+
+    list.forEach((o,i)=>{
+        let index = orders.indexOf(o);
+        let itemsTxt = o.items.map(a=>`${a.name}(${a.qty})`).join(", ");
+
+        html += `
+        <tr>
+            <td>${i+1}</td>
+            <td>${o.orderNumber}</td>
+            <td>${o.customerName}</td>
+            <td>${o.customerPhone}</td>
+            <td>${itemsTxt}</td>
+            <td>₹${o.total}</td>
+            <td><span class="status ${o.status}">${o.status}</span></td>
+            <td>
+
+                <button class="action-btn view" onclick="viewOrder(${index})"><i class="fas fa-eye"></i></button>
+
+                <button class="action-btn whatsapp" onclick="sendWhatsApp(${index})"><i class="fab fa-whatsapp"></i></button>
+
+                <button class="action-btn print" onclick="printInvoice(${index})"><i class="fas fa-print"></i></button>
+
+                ${o.status === "pending" ? `<button class="action-btn complete" onclick="markDelivered(${index})"><i class="fas fa-check"></i></button>` : ""}
+
+                <button class="action-btn delete" onclick="deleteOrder(${index})"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>`;
+    });
+
+    html += "</table>";
+    document.getElementById("ordersTable").innerHTML = html;
+}
+
+function markDelivered(i){
+    orders[i].status="delivered";
+    save();
+    sendWhatsApp(i, true); // send delivered message
+}
+
+function deleteOrder(i){
+    if(confirm("Delete this order?")){
+        orders.splice(i,1);
+        save();
+    }
+}
+
+function save(){
+    localStorage.setItem("adminOrders", JSON.stringify(orders));
+    updateDashboard();
+    renderOrders();
+}
+
+function viewOrder(i){
+    let o = orders[i];
+    document.getElementById("modalName").innerText = "Name: " + o.customerName;
+    document.getElementById("modalPhone").innerText = "Phone: " + o.customerPhone;
+    document.getElementById("modalOrderNumber").innerText = "Order No: " + o.orderNumber;
+    document.getElementById("modalDate").innerText = "Date: " + o.date;
+
+    let html = "";
+    o.items.forEach(it=>{
+        html += `<div class="modal-item">
+            <img src="${it.image}">
+            <p>${it.name} (Size: ${it.size}) x ${it.qty} — ₹${it.price}</p>
+        </div>`;
+    });
+    document.getElementById("modalItems").innerHTML = html;
+    document.getElementById("modalTotal").innerText = "Total: ₹" + o.total;
+    document.getElementById("modalStatus").innerText = "Status: " + o.status;
+    document.getElementById("orderModal").style.display="flex";
+}
+
+function closeModal(){ document.getElementById("orderModal").style.display="none"; }
+
+/* WhatsApp */
+function sendWhatsApp(i, delivered=false){
+    let o = orders[i];
+    let msg = delivered ? 
+      `Hello ${o.customerName},%0AYou have received your ordered items.%0APlease visit our store again.%0AOrder No: ${o.orderNumber}%0ATotal: ₹${o.total}` :
+      `Hello ${o.customerName},%0AYour order is placed. Please visit our store to receive your items.%0AOrder No: ${o.orderNumber}%0ATotal: ₹${o.total}`;
+
+    window.open(`https://wa.me/91${o.customerPhone}?text=${msg}`, "_blank");
+}
+
+/* Print Invoice */
+function printInvoice(i){
+    let o = orders[i];
+    let win = window.open("", "_blank");
+    win.document.write(`
+    <html><head><title>Invoice</title></head>
+    <body style="font-family:Arial;padding:20px;">
+        <h2>Invoice</h2>
+        <p><b>Order No:</b> ${o.orderNumber}</p>
+        <p><b>Name:</b> ${o.customerName}</p>
+        <p><b>Phone:</b> ${o.customerPhone}</p>
+        <p><b>Date:</b> ${o.date}</p>
+        <h3>Items</h3>
+        ${o.items.map(it=>`<p>${it.name} (Size: ${it.size}) x ${it.qty} — ₹${it.price}</p>`).join("")}
+        <h3>Total: ₹${o.total}</h3>
+        <p>Thank you for ordering!</p>
+    </body></html>
+    `);
+    win.print();
+}
+
+updateDashboard();
+renderOrders();
+</script>
+
+</body>
+</html>
